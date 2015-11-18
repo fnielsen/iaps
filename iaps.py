@@ -114,7 +114,7 @@ def sample_negative_images(n=None, random_state=None, threshold=3.0):
 
     """
     df = read_scoring()
-    filenames = df.ix[df.valmn < threshold, 'IAPS'].sample(
+    filenames = df.ix[df.valmn <= threshold, 'IAPS'].sample(
         n=n, random_state=random_state)
     full_filenames = [full_filename(filename) for filename in filenames]
     return full_filenames
@@ -136,7 +136,39 @@ def sample_positive_images(n=None, random_state=None, threshold=7.0):
 
     """
     df = read_scoring()
-    filenames = df.ix[df.valmn > threshold, 'IAPS'].sample(
+    filenames = df.ix[df.valmn >= threshold, 'IAPS'].sample(
         n=n, random_state=random_state)
+    full_filenames = [full_filename(filename) for filename in filenames]
+    return full_filenames
+
+
+def sample_neutral_images(n=None, random_state=None, thresholds=(4.0, 6.0)):
+    """Return sample of positive images.
+
+    Parameters
+    ----------
+    n : int
+        The number of image filenames to return
+    random_state : int
+        Seed for the random generator
+    thresholds : 2-tuple with float
+        Min and max for valence thresholds
+
+    Returns
+    -------
+    filenames : list of str
+        List with full filenames.
+
+    Examples
+    --------
+    >>> filenames = sample_positive_images(10)
+    >>> 'jpg' in " ".join(filenames)
+    True
+
+    """
+    df = read_scoring()
+    filenames = df.ix[(df.valmn >= thresholds[0]) &
+                      (df.valmn <= thresholds[1]), 'IAPS'].sample(
+                          n=n, random_state=random_state)
     full_filenames = [full_filename(filename) for filename in filenames]
     return full_filenames
