@@ -21,6 +21,11 @@ dom2sd      2.69
 set           20
 dtype: object
 
+>>> from PIL import Image
+>>> filenames = sample_positive_images(10)
+>>> img = Image.open(filenames[0])
+>>> # To show call: img.show()
+
 """
 
 
@@ -135,4 +140,3 @@ def sample_positive_images(n=None, random_state=None, threshold=7.0):
         n=n, random_state=random_state)
     full_filenames = [full_filename(filename) for filename in filenames]
     return full_filenames
-
