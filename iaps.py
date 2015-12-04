@@ -98,7 +98,8 @@ def full_filename(name):
     return full_filename
 
 
-def sample_negative_images(n=None, random_state=None, threshold=3.0):
+def sample_negative_images(n=None, random_state=None, threshold=3.0,
+                           exclude_desc=None):
     """Return sample of negative images.
 
     Returns
@@ -113,14 +114,14 @@ def sample_negative_images(n=None, random_state=None, threshold=3.0):
     True
 
     """
-    df = read_scoring()
-    filenames = df.ix[df.valmn <= threshold, 'IAPS'].sample(
-        n=n, random_state=random_state)
-    full_filenames = [full_filename(filename) for filename in filenames]
-    return full_filenames
+    filenames = sample_neutral_images(
+        n=n, random_state=random_state,
+        thresholds=(0.0, threshold), exclude_desc=exclude_desc)
+    return filenames
 
 
-def sample_positive_images(n=None, random_state=None, threshold=7.0):
+def sample_positive_images(n=None, random_state=None, threshold=7.0,
+                           exclude_desc=None):
     """Return sample of positive images.
 
     Returns
@@ -135,15 +136,15 @@ def sample_positive_images(n=None, random_state=None, threshold=7.0):
     True
 
     """
-    df = read_scoring()
-    filenames = df.ix[df.valmn >= threshold, 'IAPS'].sample(
-        n=n, random_state=random_state)
-    full_filenames = [full_filename(filename) for filename in filenames]
-    return full_filenames
+    filenames = sample_neutral_images(
+        n=n, random_state=random_state,
+        thresholds=(threshold, 10.0), exclude_desc=exclude_desc)
+    return filenames
 
 
-def sample_neutral_images(n=None, random_state=None, thresholds=(4.0, 6.0)):
-    """Return sample of positive images.
+def sample_neutral_images(n=None, random_state=None, thresholds=(4.0, 6.0),
+                          exclude_desc=None):
+    """Return sample of neutral images.
 
     Parameters
     ----------
@@ -152,7 +153,9 @@ def sample_neutral_images(n=None, random_state=None, thresholds=(4.0, 6.0)):
     random_state : int
         Seed for the random generator
     thresholds : 2-tuple with float
-        Min and max for valence thresholds
+        Min and max for valence thresholds, default (4.0, 6.0)
+    exclude_desc : list of str
+        List of names from 'desc' column for rows to exclude, default None.
 
     Returns
     -------
@@ -165,10 +168,19 @@ def sample_neutral_images(n=None, random_state=None, thresholds=(4.0, 6.0)):
     >>> 'jpg' in " ".join(filenames)
     True
 
+    >>> filenames = sample_neutral_images(
+    ...     100, exclude_desc=['EroticMale', 'EroticFemale'])
+
     """
     df = read_scoring()
-    filenames = df.ix[(df.valmn >= thresholds[0]) &
-                      (df.valmn <= thresholds[1]), 'IAPS'].sample(
-                          n=n, random_state=random_state)
+    if exclude_desc is None:
+        filenames = df.ix[(df.valmn >= thresholds[0]) &
+                          (df.valmn <= thresholds[1]), 'IAPS'].sample(
+                              n=n, random_state=random_state)
+    else:
+        filenames = df.ix[(df.valmn >= thresholds[0]) &
+                          (df.valmn <= thresholds[1]) &
+                          (~df.desc.isin(exclude_desc)), 'IAPS'].sample(
+                              n=n, random_state=random_state)
     full_filenames = [full_filename(filename) for filename in filenames]
     return full_filenames
